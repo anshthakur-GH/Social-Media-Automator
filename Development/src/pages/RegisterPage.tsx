@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
-import { LoginData } from '../types';
+import { RegisterData } from '../types';
 
-interface LoginPageProps {
-  onLogin: (data: LoginData) => Promise<void>;
+interface RegisterPageProps {
+  onRegister: (data: RegisterData) => Promise<void>;
 }
 
-const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
+const RegisterPage: React.FC<RegisterPageProps> = ({ onRegister }) => {
+  const navigate = useNavigate();
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -20,11 +21,20 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
     const formData = new FormData(e.target as HTMLFormElement);
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
+    const confirmPassword = formData.get('confirmPassword') as string;
+    const name = formData.get('name') as string;
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      setIsLoading(false);
+      return;
+    }
 
     try {
-      await onLogin({ email, password });
+      await onRegister({ email, password, name });
+      navigate('/');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed');
+      setError(err instanceof Error ? err.message : 'Registration failed');
     } finally {
       setIsLoading(false);
     }
@@ -35,17 +45,17 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">
-            Sign in to your account
+            Create your account
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             Or{' '}
-            <Link to="/register" className="font-medium text-indigo-600 hover:text-indigo-500">
-              create a new account
+            <Link to="/" className="font-medium text-indigo-600 hover:text-indigo-500">
+              sign in to your existing account
             </Link>
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="rounded-md shadow-sm -space-y-px">
+          <div className="rounded-md shadow-sm space-y-4">
             <Input
               label="Email address"
               type="email"
@@ -56,12 +66,27 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
               className="rounded-t-md"
             />
             <Input
+              label="Name (optional)"
+              type="text"
+              name="name"
+              fullWidth
+              autoComplete="name"
+            />
+            <Input
               label="Password"
               type="password"
               name="password"
               required
               fullWidth
-              autoComplete="current-password"
+              autoComplete="new-password"
+            />
+            <Input
+              label="Confirm Password"
+              type="password"
+              name="confirmPassword"
+              required
+              fullWidth
+              autoComplete="new-password"
               className="rounded-b-md"
             />
           </div>
@@ -72,33 +97,17 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
             </div>
           )}
 
-          <div>
-            <Button 
-              type="submit" 
-              fullWidth
-              isLoading={isLoading}
-            >
-              Sign in
-            </Button>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <input
-                id="remember-me"
-                name="remember-me"
-                type="checkbox"
-                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-              />
-              <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
-                Remember me
-              </label>
-            </div>
-          </div>
+          <Button
+            type="submit"
+            fullWidth
+            isLoading={isLoading}
+          >
+            Create Account
+          </Button>
         </form>
       </div>
     </div>
   );
 };
 
-export default LoginPage;
+export default RegisterPage; 

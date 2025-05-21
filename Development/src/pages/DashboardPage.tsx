@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import Navbar from '../components/layout/Navbar';
 import SocialMediaCards from '../components/dashboard/SocialMediaCards';
 import PostCreationForm from '../components/dashboard/PostCreationForm';
-import { User, SocialPlatform, ThemeProps } from '../types';
+import { User, SocialPlatform } from '../types';
 import Modal from '../components/ui/Modal';
 import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
 
-interface DashboardPageProps extends ThemeProps {
+interface DashboardPageProps {
   user: User;
   onLogout: () => void;
   onConnectPlatform: (platform: SocialPlatform) => void;
@@ -19,8 +19,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
   onLogout,
   onConnectPlatform,
   onPublishPost,
-  isDarkMode,
-  onToggleTheme,
 }) => {
   const [showCredentialModal, setShowCredentialModal] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState<SocialPlatform | null>(null);
@@ -110,35 +108,32 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+    <div className="min-h-screen bg-gray-50">
       <Navbar 
         user={user} 
-        onLogout={onLogout} 
-        isDarkMode={isDarkMode}
-        onToggleTheme={onToggleTheme}
+        onLogout={onLogout}
       />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+          <p className="mt-1 text-sm text-gray-500">
             Connect your social media accounts and start posting across platforms.
           </p>
         </div>
         
         <div className="mb-8">
-          <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Your Social Media Accounts</h2>
+          <h2 className="text-lg font-medium text-gray-900 mb-4">Your Social Media Accounts</h2>
           <SocialMediaCards
             accounts={user.accounts}
             onConnect={onConnectPlatform}
             onRequestCredentials={handleRequestCredentials}
-            isDarkMode={isDarkMode}
           />
         </div>
         
         <div>
-          <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Create Content</h2>
-          <PostCreationForm onPublish={onPublishPost} isDarkMode={isDarkMode} />
+          <h2 className="text-lg font-medium text-gray-900 mb-4">Create Content</h2>
+          <PostCreationForm onPublish={onPublishPost} />
         </div>
       </main>
 
@@ -146,7 +141,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
         open={showCredentialModal}
         onClose={handleModalClose}
         title={selectedPlatform ? `Connect to ${selectedPlatform.charAt(0).toUpperCase() + selectedPlatform.slice(1)}` : 'Connect'}
-        isDarkMode={isDarkMode}
       >
         <form onSubmit={handleCredentialSubmit} className="space-y-4">
           <Input
@@ -155,7 +149,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
             onChange={e => handleCredentialChange('field1', e.target.value)}
             fullWidth
             required
-            className="dark:bg-gray-800 dark:text-white dark:border-gray-700"
           />
           <Input
             label={getFieldsForPlatform(selectedPlatform).label2}
@@ -163,7 +156,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
             onChange={e => handleCredentialChange('field2', e.target.value)}
             fullWidth
             required
-            className="dark:bg-gray-800 dark:text-white dark:border-gray-700"
           />
           {selectedPlatform === 'twitter' && (
             <>
@@ -173,7 +165,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                 onChange={e => handleCredentialChange('field3', e.target.value)}
                 fullWidth
                 required
-                className="dark:bg-gray-800 dark:text-white dark:border-gray-700"
               />
               <Input
                 label={getFieldsForPlatform(selectedPlatform).label4}
@@ -181,11 +172,10 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                 onChange={e => handleCredentialChange('field4', e.target.value)}
                 fullWidth
                 required
-                className="dark:bg-gray-800 dark:text-white dark:border-gray-700"
               />
             </>
           )}
-          {error && <div className="text-red-600 dark:text-red-400 text-sm">{error}</div>}
+          {error && <div className="text-red-600 text-sm">{error}</div>}
           <Button type="submit" fullWidth>
             Connect
           </Button>

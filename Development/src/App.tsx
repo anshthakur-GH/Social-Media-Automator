@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import HowToConnectPage from './pages/HowToConnectPage';
-import { User, SocialPlatform } from './types';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { User, SocialPlatform, LoginData, RegisterData } from './types';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
 // Mock user data
 const mockUser: User = {
@@ -22,56 +23,74 @@ const mockUser: User = {
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState<User>(mockUser);
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    // Check if user has a theme preference in localStorage
-    const savedTheme = localStorage.getItem('theme');
-    // Check if user's system prefers dark mode
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    return savedTheme === 'dark' || (!savedTheme && prefersDark);
-  });
+  const [user, setUser] = useState<User | null>(null);
 
-  // Update theme when isDarkMode changes
-  useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
+  const handleLogin = async (data: LoginData) => {
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Login failed');
+      }
+
+      const userData = await response.json();
+      setUser(userData);
+      setIsAuthenticated(true);
+    } catch (error) {
+      throw error;
     }
-  }, [isDarkMode]);
-
-  const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode);
   };
 
-  const handleLogin = (email: string, password: string) => {
-    console.log('Login attempt with:', email, password);
-    setIsAuthenticated(true);
-  };
+  const handleRegister = async (data: RegisterData) => {
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
 
-  const handleSocialLogin = (provider: 'google' | 'github') => {
-    console.log('Social login with:', provider);
-    setIsAuthenticated(true);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Registration failed');
+      }
+
+      const userData = await response.json();
+      setUser(userData);
+      setIsAuthenticated(true);
+    } catch (error) {
+      throw error;
+    }
   };
 
   const handleLogout = () => {
     setIsAuthenticated(false);
+    setUser(null);
   };
 
   const handleConnectPlatform = (platform: SocialPlatform) => {
-    setUser(prevUser => ({
-      ...prevUser,
-      accounts: prevUser.accounts.map(account => 
-        account.platform === platform
-          ? { ...account, connected: !account.connected }
-          : account
-      ),
-    }));
+    if (!user) return;
+    
+    setUser(prevUser => {
+      if (!prevUser) return null;
+      return {
+        ...prevUser,
+        accounts: prevUser.accounts.map(account => 
+          account.platform === platform
+            ? { ...account, connected: !account.connected }
+            : account
+        ),
+      };
+    });
   };
 
   const handlePublishPost = async (content: string, platforms: SocialPlatform[], scheduledDate?: Date, image?: File) => {
+    if (!user) return;
+
     let allSuccess = true;
     for (const platform of platforms) {
       try {
@@ -102,33 +121,35 @@ function App() {
 
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+      <div className="min-h-screen bg-gray-50">
         <Routes>
           <Route path="/" element={
             isAuthenticated ? (
+              <Navigate to="/dashboard" />
+            ) : (
+              <LoginPage onLogin={handleLogin} />
+            )
+          } />
+          <Route path="/register" element={
+            isAuthenticated ? (
+              <Navigate to="/dashboard" />
+            ) : (
+              <RegisterPage onRegister={handleRegister} />
+            )
+          } />
+          <Route path="/dashboard" element={
+            isAuthenticated && user ? (
               <DashboardPage
                 user={user}
                 onLogout={handleLogout}
                 onConnectPlatform={handleConnectPlatform}
                 onPublishPost={handlePublishPost}
-                isDarkMode={isDarkMode}
-                onToggleTheme={toggleTheme}
               />
             ) : (
-              <LoginPage
-                onLogin={handleLogin}
-                onSocialLogin={handleSocialLogin}
-                isDarkMode={isDarkMode}
-                onToggleTheme={toggleTheme}
-              />
+              <Navigate to="/" />
             )
           } />
-          <Route path="/how-to-connect" element={
-            <HowToConnectPage
-              isDarkMode={isDarkMode}
-              onToggleTheme={toggleTheme}
-            />
-          } />
+          <Route path="/how-to-connect" element={<HowToConnectPage />} />
         </Routes>
       </div>
     </BrowserRouter>
