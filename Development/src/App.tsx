@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import HowToConnectPage from './pages/HowToConnectPage';
@@ -23,6 +23,28 @@ const mockUser: User = {
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<User>(mockUser);
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    // Check if user has a theme preference in localStorage
+    const savedTheme = localStorage.getItem('theme');
+    // Check if user's system prefers dark mode
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    return savedTheme === 'dark' || (!savedTheme && prefersDark);
+  });
+
+  // Update theme when isDarkMode changes
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [isDarkMode]);
+
+  const toggleTheme = () => {
+    setIsDarkMode(!isDarkMode);
+  };
 
   const handleLogin = (email: string, password: string) => {
     console.log('Login attempt with:', email, password);
@@ -80,7 +102,7 @@ function App() {
 
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
         <Routes>
           <Route path="/" element={
             isAuthenticated ? (
@@ -89,15 +111,24 @@ function App() {
                 onLogout={handleLogout}
                 onConnectPlatform={handleConnectPlatform}
                 onPublishPost={handlePublishPost}
+                isDarkMode={isDarkMode}
+                onToggleTheme={toggleTheme}
               />
             ) : (
               <LoginPage
                 onLogin={handleLogin}
                 onSocialLogin={handleSocialLogin}
+                isDarkMode={isDarkMode}
+                onToggleTheme={toggleTheme}
               />
             )
           } />
-          <Route path="/how-to-connect" element={<HowToConnectPage />} />
+          <Route path="/how-to-connect" element={
+            <HowToConnectPage
+              isDarkMode={isDarkMode}
+              onToggleTheme={toggleTheme}
+            />
+          } />
         </Routes>
       </div>
     </BrowserRouter>

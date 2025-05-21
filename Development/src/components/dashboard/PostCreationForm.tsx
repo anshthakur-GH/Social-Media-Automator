@@ -4,13 +4,14 @@ import TextArea from '../ui/TextArea';
 import Button from '../ui/Button';
 import Checkbox from '../ui/Checkbox';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '../ui/Card';
-import { SocialPlatform } from '../../types';
+import { SocialPlatform, ThemeProps } from '../../types';
+import Input from '../ui/Input';
 
-interface PostCreationFormProps {
+interface PostCreationFormProps extends ThemeProps {
   onPublish: (content: string, platforms: SocialPlatform[], scheduledDate?: Date, image?: File) => void;
 }
 
-const PostCreationForm: React.FC<PostCreationFormProps> = ({ onPublish }) => {
+const PostCreationForm: React.FC<PostCreationFormProps> = ({ onPublish, isDarkMode }) => {
   const [content, setContent] = useState('');
   const [selectedPlatforms, setSelectedPlatforms] = useState<SocialPlatform[]>([]);
   const [isScheduling, setIsScheduling] = useState(false);
@@ -75,176 +76,100 @@ const PostCreationForm: React.FC<PostCreationFormProps> = ({ onPublish }) => {
       <CardHeader>
         <CardTitle>Create a Post</CardTitle>
       </CardHeader>
-      <form onSubmit={handleSubmit}>
-        <CardContent className="space-y-4">
-          <TextArea
-            label="What would you like to share?"
-            placeholder="Write your post content here..."
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div>
+          <label htmlFor="content" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Post Content
+          </label>
+          <textarea
+            id="content"
+            rows={4}
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            rows={4}
-            fullWidth
+            className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
+              isDarkMode ? 'dark:bg-gray-800 dark:text-white dark:border-gray-700' : ''
+            }`}
+            placeholder="What's on your mind?"
           />
+        </div>
 
-          {/* Image upload */}
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
-              Add Media
-            </label>
-            <div className="flex items-center space-x-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => document.getElementById('file-upload')?.click()}
-                leftIcon={<ImageIcon className="h-4 w-4" />}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Select Platforms
+          </label>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+            {['facebook', 'twitter', 'instagram', 'linkedin', 'threads'].map((platform) => (
+              <label
+                key={platform}
+                className={`relative flex cursor-pointer rounded-lg border p-4 shadow-sm focus:outline-none ${
+                  selectedPlatforms.includes(platform as SocialPlatform)
+                    ? 'border-indigo-500 ring-2 ring-indigo-500'
+                    : 'border-gray-300 dark:border-gray-700'
+                } ${
+                  isDarkMode ? 'dark:bg-gray-800' : 'bg-white'
+                }`}
               >
-                {imageFile ? 'Change Image' : 'Upload Image'}
-              </Button>
-              <input
-                id="file-upload"
-                type="file"
-                className="hidden"
-                accept="image/*"
-                onChange={handleImageChange}
-              />
-              {imageFile && (
-                <span className="text-sm text-gray-500">
-                  {imageFile.name}
-                </span>
-              )}
-            </div>
-            {imagePreview && (
-              <div className="mt-2">
-                <div className="relative rounded-md overflow-hidden w-full h-48 bg-gray-100">
-                  <img
-                    src={imagePreview}
-                    alt="Preview"
-                    className="w-full h-full object-cover"
-                  />
-                  <button
-                    type="button"
-                    className="absolute top-2 right-2 bg-black bg-opacity-50 rounded-full p-1 text-white hover:bg-opacity-70"
-                    onClick={() => {
-                      setImageFile(null);
-                      setImagePreview(null);
-                    }}
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
+                <input
+                  type="checkbox"
+                  className="sr-only"
+                  checked={selectedPlatforms.includes(platform as SocialPlatform)}
+                  onChange={() => handlePlatformToggle(platform as SocialPlatform)}
+                />
+                <div className="flex w-full items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="text-sm">
+                      <p className={`font-medium ${
+                        isDarkMode ? 'text-white' : 'text-gray-900'
+                      }`}>
+                        {platform.charAt(0).toUpperCase() + platform.slice(1)}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            )}
+              </label>
+            ))}
           </div>
+        </div>
 
-          {/* Platform selection */}
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
-              Select platforms to post to
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+          <div>
+            <label htmlFor="scheduledDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Schedule Post (Optional)
             </label>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-              <div>
-                <Checkbox
-                  id="platform-facebook"
-                  label="Facebook"
-                  checked={selectedPlatforms.includes('facebook')}
-                  onChange={() => handlePlatformToggle('facebook')}
-                />
-              </div>
-              <div>
-                <Checkbox
-                  id="platform-twitter"
-                  label="X (Twitter)"
-                  checked={selectedPlatforms.includes('twitter')}
-                  onChange={() => handlePlatformToggle('twitter')}
-                />
-              </div>
-              <div>
-                <Checkbox
-                  id="platform-instagram"
-                  label="Instagram"
-                  checked={selectedPlatforms.includes('instagram')}
-                  onChange={() => handlePlatformToggle('instagram')}
-                />
-              </div>
-              <div>
-                <Checkbox
-                  id="platform-linkedin"
-                  label="LinkedIn"
-                  checked={selectedPlatforms.includes('linkedin')}
-                  onChange={() => handlePlatformToggle('linkedin')}
-                />
-              </div>
-            </div>
+            <Input
+              type="datetime-local"
+              id="scheduledDate"
+              value={scheduledDate}
+              onChange={(e) => setScheduledDate(e.target.value)}
+              className={isDarkMode ? 'dark:bg-gray-800 dark:text-white dark:border-gray-700' : ''}
+            />
           </div>
 
-          {/* Scheduling options */}
-          <div className="pt-2">
-            <Checkbox
-              id="schedule-post"
-              label="Schedule for later"
-              checked={isScheduling}
-              onChange={() => setIsScheduling(!isScheduling)}
+          <div>
+            <label htmlFor="image" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Add Image (Optional)
+            </label>
+            <input
+              type="file"
+              id="image"
+              accept="image/*"
+              onChange={handleImageChange}
+              className={`mt-1 block w-full text-sm text-gray-500 dark:text-gray-400
+                file:mr-4 file:py-2 file:px-4
+                file:rounded-md file:border-0
+                file:text-sm file:font-semibold
+                file:bg-indigo-50 file:text-indigo-700
+                dark:file:bg-indigo-900 dark:file:text-indigo-300
+                hover:file:bg-indigo-100 dark:hover:file:bg-indigo-800`}
             />
-            
-            {isScheduling && (
-              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="flex items-center">
-                  <div className="relative w-full">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Calendar className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <input
-                      type="date"
-                      className="pl-10 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                      value={scheduledDate}
-                      onChange={e => setScheduledDate(e.target.value)}
-                      min={new Date().toISOString().split('T')[0]}
-                    />
-                  </div>
-                </div>
-                
-                <div className="flex items-center">
-                  <div className="relative w-full">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Clock className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <input
-                      type="time"
-                      className="pl-10 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                      value={scheduledTime}
-                      onChange={e => setScheduledTime(e.target.value)}
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
-        </CardContent>
-        
-        <CardFooter className="flex justify-end space-x-2 bg-gray-50 border-t border-gray-100">
-          {isScheduling ? (
-            <Button 
-              type="submit"
-              variant="primary"
-              isLoading={isSubmitting}
-              leftIcon={<Calendar className="h-4 w-4" />}
-            >
-              Schedule Post
-            </Button>
-          ) : (
-            <Button 
-              type="submit"
-              variant="primary"
-              isLoading={isSubmitting}
-              leftIcon={<Upload className="h-4 w-4" />}
-            >
-              Publish Now
-            </Button>
-          )}
-        </CardFooter>
+        </div>
+
+        <div className="flex justify-end">
+          <Button type="submit" isLoading={isSubmitting}>
+            {scheduledDate ? 'Schedule Post' : 'Publish Now'}
+          </Button>
+        </div>
       </form>
     </Card>
   );

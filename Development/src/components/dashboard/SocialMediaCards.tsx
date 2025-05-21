@@ -1,101 +1,94 @@
 import React from 'react';
-import { Facebook, Twitter, Instagram, Linkedin, Check } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/Card';
+import { SocialPlatform, ThemeProps } from '../../types';
 import Button from '../ui/Button';
-import { SocialMediaAccount, SocialPlatform } from '../../types';
 
-interface SocialMediaCardsProps {
-  accounts: SocialMediaAccount[];
+interface SocialMediaCardsProps extends ThemeProps {
+  accounts: { platform: SocialPlatform; connected: boolean }[];
   onConnect: (platform: SocialPlatform) => void;
-  onRequestCredentials?: (platform: SocialPlatform) => void;
+  onRequestCredentials: (platform: SocialPlatform) => void;
 }
 
-const SocialMediaCards: React.FC<SocialMediaCardsProps> = ({ accounts, onConnect, onRequestCredentials }) => {
-  
-  const platformConfig = {
-    facebook: {
-      name: 'Facebook',
-      icon: <Facebook className="h-6 w-6" />,
-      color: 'text-blue-600',
-      bg: 'bg-blue-50',
-      border: 'border-blue-100',
-      description: 'Connect to share posts to your Facebook page or profile.'
-    },
-    twitter: {
-      name: 'X (Twitter)',
-      icon: <Twitter className="h-6 w-6" />,
-      color: 'text-black',
-      bg: 'bg-gray-50',
-      border: 'border-gray-100',
-      description: 'Connect to share tweets to your X (Twitter) account.'
-    },
-    instagram: {
-      name: 'Instagram',
-      icon: <Instagram className="h-6 w-6" />,
-      color: 'text-pink-600',
-      bg: 'bg-pink-50',
-      border: 'border-pink-100',
-      description: 'Connect to share images and videos to your Instagram.'
-    },
-    linkedin: {
-      name: 'LinkedIn',
-      icon: <Linkedin className="h-6 w-6" />,
-      color: 'text-blue-700',
-      bg: 'bg-blue-50',
-      border: 'border-blue-100',
-      description: 'Connect to share updates to your LinkedIn profile or page.'
-    },
-    threads: {
-      name: 'Threads',
-      icon: <Instagram className="h-6 w-6" />,
-      color: 'text-purple-600',
-      bg: 'bg-purple-50',
-      border: 'border-purple-100',
-      description: 'Connect to share posts to your Threads account.'
-    },
+const SocialMediaCards: React.FC<SocialMediaCardsProps> = ({
+  accounts,
+  onConnect,
+  onRequestCredentials,
+  isDarkMode,
+}) => {
+  const getPlatformIcon = (platform: SocialPlatform) => {
+    switch (platform) {
+      case 'facebook':
+        return '📘';
+      case 'twitter':
+        return '🐦';
+      case 'instagram':
+        return '📸';
+      case 'linkedin':
+        return '💼';
+      case 'threads':
+        return '🧵';
+      default:
+        return '🔗';
+    }
+  };
+
+  const getPlatformColor = (platform: SocialPlatform) => {
+    switch (platform) {
+      case 'facebook':
+        return 'bg-blue-500 dark:bg-blue-600';
+      case 'twitter':
+        return 'bg-sky-500 dark:bg-sky-600';
+      case 'instagram':
+        return 'bg-pink-500 dark:bg-pink-600';
+      case 'linkedin':
+        return 'bg-blue-700 dark:bg-blue-800';
+      case 'threads':
+        return 'bg-gray-500 dark:bg-gray-600';
+      default:
+        return 'bg-gray-500 dark:bg-gray-600';
+    }
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      {accounts.map((account) => {
-        const platform = platformConfig[account.platform];
-        
-        return (
-          <Card 
-            key={account.platform}
-            className={`transition-all duration-200 ${platform.border} hover:shadow-md`}
-          >
-            <CardHeader className={`${platform.bg}`}>
-              <div className="flex justify-between items-center">
-                <div className={`${platform.color} p-2 rounded-md ${platform.bg}`}>
-                  {platform.icon}
-                </div>
-                <div className={`text-xs font-medium px-2 py-1 rounded-full ${account.connected ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-                  {account.connected ? 'Connected' : 'Not connected'}
-                </div>
-              </div>
-              <CardTitle>{platform.name}</CardTitle>
-              <CardDescription>{platform.description}</CardDescription>
-            </CardHeader>
-            <CardFooter className="pt-4">
-              <Button 
-                fullWidth
-                variant={account.connected ? 'secondary' : 'primary'}
-                onClick={() => {
-                  if (!account.connected && onRequestCredentials) {
-                    onRequestCredentials(account.platform);
-                  } else {
-                    onConnect(account.platform);
-                  }
-                }}
-                leftIcon={account.connected ? <Check className="h-4 w-4" /> : null}
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {accounts.map((account) => (
+        <div
+          key={account.platform}
+          className={`relative rounded-lg border ${
+            isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'
+          } p-6 shadow-sm transition-all hover:shadow-md`}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div
+                className={`flex h-10 w-10 items-center justify-center rounded-full ${getPlatformColor(
+                  account.platform
+                )} text-white`}
               >
-                {account.connected ? 'Connected' : 'Connect'}
-              </Button>
-            </CardFooter>
-          </Card>
-        );
-      })}
+                <span className="text-xl">{getPlatformIcon(account.platform)}</span>
+              </div>
+              <div>
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                  {account.platform.charAt(0).toUpperCase() + account.platform.slice(1)}
+                </h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  {account.connected ? 'Connected' : 'Not connected'}
+                </p>
+              </div>
+            </div>
+            <Button
+              onClick={() =>
+                account.connected
+                  ? onConnect(account.platform)
+                  : onRequestCredentials(account.platform)
+              }
+              variant={account.connected ? 'outline' : 'primary'}
+              className={account.connected ? 'dark:border-gray-700 dark:text-white dark:hover:bg-gray-800' : ''}
+            >
+              {account.connected ? 'Disconnect' : 'Connect'}
+            </Button>
+          </div>
+        </div>
+      ))}
     </div>
   );
 };
